@@ -119,3 +119,70 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+AUTHORIZATION_DIR = os.path.join(Path(BASE_DIR).parent, "authorization")
+JWT_PRIVATE_KEY_PATH = os.path.join(AUTHORIZATION_DIR, "jwt_key")
+JWT_PUBLIC_KEY_PATH = os.path.join(AUTHORIZATION_DIR, "jwt_key.pub")
+
+# Script for creating the Private/Public Key Pair
+if (not os.path.exists(JWT_PRIVATE_KEY_PATH)) or (
+    not os.path.exists(JWT_PUBLIC_KEY_PATH)
+):
+    if not os.path.exists(AUTHORIZATION_DIR):
+        os.makedirs(AUTHORIZATION_DIR)
+    private_key = rsa.generate_private_key(
+        public_exponent=65537, key_size=4096, backend=default_backend()
+    )
+    pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    with open(JWT_PRIVATE_KEY_PATH, "w") as pk:
+        pk.write(pem.decode())
+    public_key = private_key.public_key()
+    pem_public = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    with open(JWT_PUBLIC_KEY_PATH, "w") as pk:
+        pk.write(pem_public.decode())
+    print("PUBLIC/PRIVATE keys Generated!")
+
+# JWT Access validity duration in days
+ACCESS_TOKEN_VALID_DURATION = 5
+# JWT Refresh token validity duration in weeks
+REFRESH_TOKEN_VALID_DURATION = 2
+# Visit this page to see all the registered JWT claims:
+# https://tools.ietf.org/html/rfc7519#section-4.1
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        days=ACCESS_TOKEN_VALID_DURATION
+    ),  # "exp" (Expiration Time) Claim
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        weeks=REFRESH_TOKEN_VALID_DURATION
+    ),  # "exp" (Expiration Time) Claim
+    "ROTATE_REFRESH_TOKENS": True,  # When set to True, if a refresh token is submitted to the TokenRefreshView, a new refresh token will be returned along with the new access token.
+    "BLACKLIST_AFTER_ROTATION": False,  # If the blacklist app is in use and the BLACKLIST_AFTER_ROTATION setting is set to True, refresh token submitted to the refresh endpoint will be added to the blacklist in DB and will not be valid.
+    "UPDATE_LAST_LOGIN": False,  # When set to True, last_login field in the auth_user table is updated upon login (TokenObtainPairView).
+    # Warning: throttle the endpoint with DRF at the very least otherwise it will slow down the server if someone is abusing with the view.
+    "ALGORITHM": "RS256",  # 'alg' (Algorithm Used) specified in header [alternative => HS256]
+    "SIGNING_KEY": open(JWT_PRIVATE_KEY_PATH).read(),
+    "VERIFYING_KEY": open(JWT_PUBLIC_KEY_PATH).read(),
+    "AUDIENCE": None,  # "aud" (Audience) Claim
+    "ISSUER": None,  # "iss" (Issuer) Claim
+    "USER_ID_CLAIM": "user_id",  # The field name used for identifying the user
+    "USER_ID_FIELD": "id",  # The field in the DB which will be filled in USER_ID_CLAIM and will be used for comparison
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",  # This rule is applied after a valid token is processed. The user object is passed to the callable as an argument. The default rule is to check that the is_active flag is still True. The callable must return a boolean, True if authorized, False otherwise resulting in a 401 status code.
+    "JTI_CLAIM": "jti",  # Token's unique identifier
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}

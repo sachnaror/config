@@ -7,6 +7,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from decouple import config
 
+DEBUG = config('DEBUG', default=False, cast=bool)
+SECRET_KEY = config('SECRET_KEY')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,6 +37,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'authapp',
+
 ]
 
 MIDDLEWARE = [
@@ -127,6 +130,8 @@ REST_FRAMEWORK = {
     ),
 }
 
+
+
 AUTHORIZATION_DIR = os.path.join(Path(BASE_DIR).parent, "authorization")
 JWT_PRIVATE_KEY_PATH = os.path.join(AUTHORIZATION_DIR, "jwt_key")
 JWT_PUBLIC_KEY_PATH = os.path.join(AUTHORIZATION_DIR, "jwt_key.pub")
@@ -170,19 +175,5 @@ SIMPLE_JWT = {
         weeks=REFRESH_TOKEN_VALID_DURATION
     ),  # "exp" (Expiration Time) Claim
     "ROTATE_REFRESH_TOKENS": True,  # When set to True, if a refresh token is submitted to the TokenRefreshView, a new refresh token will be returned along with the new access token.
-    "BLACKLIST_AFTER_ROTATION": False,  # If the blacklist app is in use and the BLACKLIST_AFTER_ROTATION setting is set to True, refresh token submitted to the refresh endpoint will be added to the blacklist in DB and will not be valid.
-    "UPDATE_LAST_LOGIN": False,  # When set to True, last_login field in the auth_user table is updated upon login (TokenObtainPairView).
-    # Warning: throttle the endpoint with DRF at the very least otherwise it will slow down the server if someone is abusing with the view.
-    "ALGORITHM": "RS256",  # 'alg' (Algorithm Used) specified in header [alternative => HS256]
-    "SIGNING_KEY": open(JWT_PRIVATE_KEY_PATH).read(),
-    "VERIFYING_KEY": open(JWT_PUBLIC_KEY_PATH).read(),
-    "AUDIENCE": None,  # "aud" (Audience) Claim
-    "ISSUER": None,  # "iss" (Issuer) Claim
-    "USER_ID_CLAIM": "user_id",  # The field name used for identifying the user
-    "USER_ID_FIELD": "id",  # The field in the DB which will be filled in USER_ID_CLAIM and will be used for comparison
-    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",  # This rule is applied after a valid token is processed. The user object is passed to the callable as an argument. The default rule is to check that the is_active flag is still True. The callable must return a boolean, True if authorized, False otherwise resulting in a 401 status code.
-    "JTI_CLAIM": "jti",  # Token's unique identifier
-    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "TOKEN_TYPE_CLAIM": "token_type",
-    "AUTH_HEADER_TYPES": ("Bearer",),
+    "BLACKLIST_AFTER_ROTATION": False,  # If the blacklist
 }

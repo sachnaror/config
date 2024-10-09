@@ -59,4 +59,4 @@ SSO is a versatile solution that can be applied in various scenarios:
 Ready to unlock the power of SSO?  Dive into the code and explore the possibilities!  Feel free to ask questions and contribute to this project.  Let's make authentication a breeze! 💨
 
 
-![alt text](/Users/homesachin/Desktop/Screenshot 2024-10-09 at 12.17.53 PM.png){ width="500" height="500" }
+![alt text](image.png){ width="500" height="500" }
